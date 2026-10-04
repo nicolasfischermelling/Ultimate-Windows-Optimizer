@@ -29,6 +29,34 @@ jobs:
           if (Get-ChildItem logs -Filter 'journal-*.json') { throw 'Dry run must not write a journal' }
           Get-Content $report.FullName
 
+      - name: WinOptSuite self-test (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          .\WinOptSuite.ps1 -SelfTest
+          if ($LASTEXITCODE) { throw "WinOptSuite self-test exited with $LASTEXITCODE" }
+
+      - name: Pinned hashes match upstream downloads
+        shell: powershell
+        run: |
+          $ini = @{}; $sec = $null
+          foreach ($l in Get-Content config.ini) {
+            $t = $l.Trim()
+            if (-not $t -or $t.StartsWith(';')) { continue }
+            if ($t -match '^\[(.+)\]$') { $sec = $Matches[1]; $ini[$sec] = @{}; continue }
+            if ($t -match '^([^=]+)=(.*)$') { $ini[$sec][$Matches[1].Trim()] = $Matches[2].Trim() }
+          }
+          $failed = $false
+          foreach ($s in $ini.Keys) {
+            $t = $ini[$s]
+            if (-not $t.Sha256) { Write-Host "$s : no pinned hash (confirmed on first use)"; continue }
+            $url = $t.UrlTemplate.Replace('{tag}', $t.ReleaseTag).Replace('{version}', $t.Version)
+            $tmp = Join-Path $env:RUNNER_TEMP "$s.bin"
+            Invoke-WebRequest $url -OutFile $tmp -UseBasicParsing
+            $h = (Get-FileHash $tmp -Algorithm SHA256).Hash
+            if ($h -eq $t.Sha256) { Write-Host "$s : OK" } else { Write-Host "$s : MISMATCH $h"; $failed = $true }
+          }
+          if ($failed) { exit 1 }
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,34 @@
+WinOptSuite - Third-party notices
+=================================
+
+WinOptSuite does not include, copy or modify the source code of the projects
+below. It downloads each one from its official location at run time (pinned
+version + SHA256 check) and runs it on the user's own PC. Each project remains
+under its own license and copyright.
+
+1. WinUtil
+   Author:  Chris Titus Tech (ChrisTitusTech) and contributors
+   License: MIT
+   URL:     https://github.com/ChrisTitusTech/winutil
+
+2. Win11Debloat
+   Author:  Raphire and contributors
+   License: MIT
+   URL:     https://github.com/Raphire/Win11Debloat
+
+3. Sophia Script for Windows
+   Author:  farag2 (Team Sophia) and contributors
+   License: MIT
+   URL:     https://github.com/farag2/Sophia-Script-for-Windows
+
+4. RemoveWindowsAI
+   Author:  zoicware and contributors
+   License: MIT
+   URL:     https://github.com/zoicware/RemoveWindowsAI
+
+5. privacy.sexy
+   Author:  undergroundwires and contributors
+   License: AGPL-3.0
+   URL:     https://github.com/undergroundwires/privacy.sexy
+   Use:     WinOptSuite only opens https://privacy.sexy in the browser.
+            No privacy.sexy code is embedded or redistributed.

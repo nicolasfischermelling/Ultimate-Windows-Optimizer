@@ -18,7 +18,7 @@
     Show what would be done without changing anything.
 
 .PARAMETER Mode
-    All (default), Cleanup or Performance.
+    All (default), Cleanup, Performance or Drives (drive optimization only).
 
 .PARAMETER VisualEffects
     BestPerformance (default, keeps font smoothing) or Skip.
@@ -40,7 +40,7 @@
 [CmdletBinding()]
 param(
     [switch]$DryRun,
-    [ValidateSet('All', 'Cleanup', 'Performance')][string]$Mode = 'All',
+    [ValidateSet('All', 'Cleanup', 'Performance', 'Drives')][string]$Mode = 'All',
     [ValidateSet('BestPerformance', 'Skip')][string]$VisualEffects = 'BestPerformance',
     [ValidateSet('Auto', 'Yes', 'No')][string]$Gaming = 'Auto',
     [ValidateRange(0, 1000)][int]$WindowsOldMinGB = 2,
@@ -138,7 +138,8 @@ try {
     New-SafetyRestorePoint
     if ($Mode -in 'All', 'Cleanup') { Invoke-CleanupPass }
     if ($Mode -in 'All', 'Performance') { Invoke-PerformancePass }
-    Invoke-Section 'Find-Bloatware'
+    if ($Mode -eq 'Drives') { Invoke-Section 'Optimize-Drives' }
+    if ($Mode -ne 'Drives') { Invoke-Section 'Find-Bloatware' }
 }
 finally {
     Save-Journal

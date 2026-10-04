@@ -1,0 +1,17 @@
+<!--
+  Windows Sandbox test config for WinOptSuite.
+  1. Change HostFolder below to the folder where you extracted this repo.
+  2. Double-click this file (needs Windows Pro/Enterprise with "Windows Sandbox" turned on).
+  3. Inside the sandbox, open the WinOptSuite folder on the desktop and double-click WinOptSuite.bat.
+  Everything done inside the sandbox is thrown away when you close it.
+-->
+<Configuration>
+  <Networking>Enable</Networking>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\Users\YOUR-NAME\Downloads\Ultimate-Windows-Optimizer</HostFolder>
+      <SandboxFolder>C:\Users\WDAGUtilityAccount\Desktop\WinOptSuite</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+</Configuration>
