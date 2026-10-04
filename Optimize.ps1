@@ -61,6 +61,7 @@ $script:Gaming = $Gaming
 $script:WindowsOldMinGB = $WindowsOldMinGB
 $script:Lists = Import-PowerShellDataFile -Path (Join-Path $PSScriptRoot 'config\Lists.psd1')
 $script:Journal = [System.Collections.Generic.List[object]]::new()
+$script:ErrorCount = 0
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $logDir = Join-Path $PSScriptRoot 'logs'
@@ -72,7 +73,7 @@ $reportFile = Join-Path $logDir "report-$stamp.json"
 $script:Report = [ordered]@{
     StartedAt              = (Get-Date).ToString('s')
     Computer               = $env:COMPUTERNAME
-    DryRun                 = $script:DryRun
+    DryRun                 = $DryRun.IsPresent
     Mode                   = $Mode
     FreeBeforeBytes        = $null
     FreeAfterBytes         = $null
@@ -128,6 +129,7 @@ function Write-Summary {
     Write-Host "Log:     $script:LogFile"
     if (Test-Path -LiteralPath $script:JournalFile) { Write-Host "Undo:    .\Undo.ps1 -JournalPath `"$script:JournalFile`"" }
     Write-Host 'Sign out or restart to apply visual-effect and service changes.'
+    if ($script:ErrorCount) { Write-Host "$($script:ErrorCount) step(s) reported errors - see the log." -ForegroundColor Red }
 }
 
 Write-Log "Ultimate Windows Optimizer - mode: $Mode, dry-run: $($script:DryRun)"
@@ -136,7 +138,7 @@ try {
     New-SafetyRestorePoint
     if ($Mode -in 'All', 'Cleanup') { Invoke-CleanupPass }
     if ($Mode -in 'All', 'Performance') { Invoke-PerformancePass }
-    Find-Bloatware
+    Invoke-Section 'Find-Bloatware'
 }
 finally {
     Save-Journal
@@ -144,3 +146,4 @@ finally {
     $script:Report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $reportFile -Encoding UTF8
 }
 Write-Summary
+if ($script:ErrorCount) { exit 2 }

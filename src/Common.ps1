@@ -14,6 +14,7 @@ function Write-Log {
         'DRY'   { 'Cyan' }
         default { 'Gray' }
     }
+    if ($Level -eq 'ERROR') { $script:ErrorCount++ }
     Write-Host $line -ForegroundColor $color
     if ($script:LogFile) { Add-Content -LiteralPath $script:LogFile -Value $line -Encoding UTF8 }
 }
@@ -37,6 +38,20 @@ function Invoke-Step {
         Write-Log "$Description failed: $($_.Exception.Message)" 'ERROR'
         return $false
     }
+}
+
+# Runs one optimization step; a failure is logged and the remaining steps still run.
+function Invoke-Section {
+    param([Parameter(Mandatory)][string]$Name)
+    try { & $Name }
+    catch { Write-Log "$Name failed: $($_.Exception.Message)" 'ERROR' }
+}
+
+function Get-FolderBytes {
+    param([Parameter(Mandatory)][string]$Path)
+    [double]$total = 0
+    foreach ($f in Get-ChildItem -LiteralPath $Path -Force -Recurse -File -ErrorAction SilentlyContinue) { $total += $f.Length }
+    return $total
 }
 
 function Format-Bytes {

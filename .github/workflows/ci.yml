@@ -23,7 +23,7 @@ jobs:
         shell: powershell
         run: |
           .\Optimize.ps1 -DryRun
-          if (-not $?) { exit 1 }
+          if ($LASTEXITCODE) { throw "Optimize.ps1 exited with $LASTEXITCODE" }
           $report = Get-ChildItem logs -Filter 'report-*.json' | Select-Object -First 1
           if (-not $report) { throw 'No report produced' }
           if (Get-ChildItem logs -Filter 'journal-*.json') { throw 'Dry run must not write a journal' }

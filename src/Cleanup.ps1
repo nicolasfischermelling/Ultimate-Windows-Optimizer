@@ -4,15 +4,13 @@
 function Remove-FolderContents {
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][string]$Label)
     if (-not (Test-Path -LiteralPath $Path)) { return }
-    $size = (Get-ChildItem -LiteralPath $Path -Force -Recurse -File -ErrorAction SilentlyContinue |
-        Measure-Object -Property Length -Sum).Sum
-    if (-not $size) { $size = 0 }
+    $size = Get-FolderBytes -Path $Path
     # Locked files are skipped silently; the real result is measured as free-space delta.
     $ok = Invoke-Step "Clean $Label ($(Format-Bytes $size) found)" {
         Get-ChildItem -LiteralPath $Path -Force -ErrorAction SilentlyContinue |
             Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
     }
-    $script:Report.Cleanup.Add([pscustomobject]@{ Item = $Label; FoundBytes = [double]$size; Done = $ok })
+    $script:Report.Cleanup.Add([pscustomobject]@{ Item = $Label; FoundBytes = $size; Done = $ok })
 }
 
 function Clear-TempFolders {
@@ -72,8 +70,7 @@ function Invoke-DiskCleanup {
 
     $winOld = Join-Path $env:SystemDrive 'Windows.old'
     if (Test-Path -LiteralPath $winOld) {
-        $size = (Get-ChildItem -LiteralPath $winOld -Force -Recurse -File -ErrorAction SilentlyContinue |
-            Measure-Object -Property Length -Sum).Sum
+        $size = Get-FolderBytes -Path $winOld
         if ($size -ge ($script:WindowsOldMinGB * 1GB)) {
             $categories.Add('Previous Installations')
             Write-Log "Windows.old is $(Format-Bytes $size); it will be removed (rollback to the previous Windows version will no longer be possible)." 'WARN'
@@ -105,10 +102,8 @@ function Invoke-DiskCleanup {
 
 function Invoke-CleanupPass {
     Write-Log '=== Cleanup pass ==='
-    Clear-TempFolders
-    Clear-RecycleBins
-    Clear-WindowsUpdateCache
-    Clear-DeliveryOptimization
-    Clear-BrowserCaches
-    Invoke-DiskCleanup
+    foreach ($step in 'Clear-TempFolders', 'Clear-RecycleBins', 'Clear-WindowsUpdateCache',
+        'Clear-DeliveryOptimization', 'Clear-BrowserCaches', 'Invoke-DiskCleanup') {
+        Invoke-Section $step
+    }
 }

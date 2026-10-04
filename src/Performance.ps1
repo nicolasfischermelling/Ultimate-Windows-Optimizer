@@ -190,10 +190,8 @@ function Optimize-Services {
 
 function Invoke-PerformancePass {
     Write-Log '=== Performance pass ==='
-    Set-PowerPlan
-    Optimize-StartupApps
-    Set-VisualEffects
-    Disable-BackgroundApps
-    Optimize-Services
-    Optimize-Drives
+    foreach ($step in 'Set-PowerPlan', 'Optimize-StartupApps', 'Set-VisualEffects',
+        'Disable-BackgroundApps', 'Optimize-Services', 'Optimize-Drives') {
+        Invoke-Section $step
+    }
 }
