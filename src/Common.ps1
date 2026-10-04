@@ -85,9 +85,14 @@ function Get-InstalledPrograms {
         'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
         'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
     )
+    # Many uninstall keys have no DisplayName/Publisher; check before reading (strict mode).
     Get-ItemProperty -Path $paths -ErrorAction SilentlyContinue |
-        Where-Object { $_.DisplayName } |
-        Select-Object DisplayName, Publisher -Unique
+        Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName } |
+        ForEach-Object {
+            $publisher = if ($_.PSObject.Properties['Publisher']) { $_.Publisher } else { $null }
+            [pscustomobject]@{ DisplayName = [string]$_.DisplayName; Publisher = $publisher }
+        } |
+        Sort-Object DisplayName -Unique
 }
 
 # Writes a registry value and records the previous state so Undo.ps1 can revert it.
