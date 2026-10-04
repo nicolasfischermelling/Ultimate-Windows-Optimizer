@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-dry-run:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PSScriptAnalyzer
+        shell: powershell
+        run: |
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error
+          $results | Format-Table -AutoSize
+          if ($results) { exit 1 }
+
+      - name: Dry run (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          .\Optimize.ps1 -DryRun
+          if (-not $?) { exit 1 }
+          $report = Get-ChildItem logs -Filter 'report-*.json' | Select-Object -First 1
+          if (-not $report) { throw 'No report produced' }
+          if (Get-ChildItem logs -Filter 'journal-*.json') { throw 'Dry run must not write a journal' }
+          Get-Content $report.FullName
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-logs
+          path: logs/
